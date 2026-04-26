@@ -1,22 +1,17 @@
-# Use official OpenJDK image
-FROM eclipse-temurin:17-jdk
+FROM maven:3.9-eclipse-temurin-17 AS build
 
-# Set working directory inside container
 WORKDIR /app
 
-# Copy Maven project files
-COPY pom.xml .
-COPY src ./src
+COPY . .
 
-# Build the application inside container
-RUN apt-get update && apt-get install -y maven
 RUN mvn clean package -DskipTests
 
-# Run the generated JAR file
-COPY target/*.jar app.jar
+FROM eclipse-temurin:17-jdk
 
-# Expose port (Spring Boot default)
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
 EXPOSE 8080
 
-# Start application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]
